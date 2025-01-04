@@ -1,0 +1,85 @@
+# Professional-Grade Energy Grid Simulation using the Lumin Equation
+# Optimized for Stability and Performance
+
+# Import necessary libraries
+try:
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from scipy.fft import fft
+except ImportError:
+    print("Please install numpy, matplotlib, and scipy using 'pip install numpy matplotlib scipy'")
+    exit()
+
+# Step 1: Parameters and Initialization (Optimized)
+num_nodes = 100
+time_steps = 200
+phi = (1 + np.sqrt(5)) / 2  # Golden ratio
+harmonic_frequencies = [3, 6, 9]
+frequencies = np.random.uniform(0.5, 2.0, num_nodes)
+phases = np.random.uniform(0, 2 * np.pi, num_nodes)
+time = np.linspace(0, 10, time_steps)
+
+# Step 2: Compute Harmonic Oscillations with Memory Optimization
+harmonic_oscillations = np.zeros((num_nodes, time_steps))
+for i in range(num_nodes):
+    oscillation_sum = np.zeros(time_steps)
+    for f in harmonic_frequencies:
+        oscillation_sum += phi**i * np.sin(2 * np.pi * f * frequencies[i] * time + phases[i]/f)
+    # Normalize if possible, with safeguard against zero division
+    max_val = np.max(np.abs(oscillation_sum))
+    harmonic_oscillations[i] = oscillation_sum / max_val if max_val != 0 else oscillation_sum
+
+# Step 3: Feedback Mechanism with Controlled Perturbations
+feedback_threshold = 0.7
+adjusted_oscillations = harmonic_oscillations.copy()
+for i in range(num_nodes):
+    if np.max(harmonic_oscillations[i]) < feedback_threshold:
+        noise = np.random.uniform(-0.1, 0.1, time_steps)
+        adjusted_oscillations[i] += noise
+    # Normalize after feedback application
+    max_val = np.max(np.abs(adjusted_oscillations[i]))
+    adjusted_oscillations[i] /= max_val if max_val != 0 else 1
+
+# Step 4: Energy Loss Calculation (Normalized)
+energy_loss = np.sum(np.abs(adjusted_oscillations), axis=1)
+
+# Step 5: Phase Stability Calculation
+final_phases = np.max(adjusted_oscillations, axis=1)
+
+# Step 6: Fourier Transform for Spectral Analysis
+fft_results = fft(adjusted_oscillations, axis=1)
+fft_magnitudes = np.abs(fft_results[:, :time_steps//2])  # Only positive frequencies
+
+# Visualization Function for Consistency
+def plot_and_save(data, title, xlabel, ylabel, filename, colormap="viridis"):
+    plt.figure(figsize=(12, 6))
+    if data.ndim == 2:  # Heatmap for oscillations
+        plt.imshow(data, aspect='auto', cmap=colormap)
+        plt.colorbar(label=ylabel)
+    else:  # Line plot for energy loss and phase stability
+        plt.plot(range(num_nodes), data, marker='o', color='red')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.show()
+
+# Step 7: Coherence Heatmap
+plot_and_save(adjusted_oscillations, "Coherence Heatmap (Normalized)", 
+              "Time Steps", "Normalized Amplitude", "coherence_heatmap.png")
+
+# Step 8: Energy Loss Visualization
+plot_and_save(energy_loss, "Energy Loss Over Time (Normalized)", 
+              "Node Index", "Energy Dissipation", "energy_loss_plot.png")
+
+# Step 9: FFT Spectrum Visualization
+plot_and_save(fft_magnitudes, "FFT Spectrum of Node Oscillations", 
+              "Frequency Bins", "FFT Magnitude", "fft_spectrum.png", colormap="plasma")
+
+# Step 10: Data Export
+np.savetxt("harmonic_oscillations.csv", harmonic_oscillations, delimiter=",")
+np.savetxt("energy_loss.csv", energy_loss, delimiter=",")
+np.savetxt("fft_magnitudes.csv", fft_magnitudes, delimiter=",")
+
+print("✅ Simulation complete! Results have been saved successfully.")
